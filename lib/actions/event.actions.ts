@@ -7,6 +7,8 @@ import Event from '@/lib/database/models/event.model'
 import User from '@/lib/database/models/user.model'
 import Category from '@/lib/database/models/category.model'
 import { handleError } from '@/lib/utils'
+import mongoose from 'mongoose'
+import { auth, currentUser } from '@clerk/nextjs'
 
 import {
   CreateEventParams,
@@ -32,10 +34,41 @@ export async function createEvent({ userId, event, path }: CreateEventParams) {
   try {
     await connectToDatabase()
 
-    const organizer = await User.findById(userId)
-    if (!organizer) throw new Error('Organizer not found')
+    let organizer = null
 
-    const newEvent = await Event.create({ ...event, category: event.categoryId, organizer: userId })
+    // 1. Try finding by MongoDB ObjectId if valid
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      organizer = await User.findById(userId)
+    }
+
+    // 2. If not found by ObjectId, resolve via Clerk ID
+    if (!organizer) {
+      const { userId: clerkUserId } = auth()
+      const targetClerkId = (userId && !mongoose.Types.ObjectId.isValid(userId)) ? userId : clerkUserId
+
+      if (targetClerkId) {
+        organizer = await User.findOne({ clerkId: targetClerkId })
+
+        // 3. Auto-sync user to MongoDB if webhook hadn't caught it yet
+        if (!organizer) {
+          const clerkUser = await currentUser()
+          if (clerkUser) {
+            organizer = await User.create({
+              clerkId: clerkUser.id,
+              email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
+              username: clerkUser.username || clerkUser.firstName || `user_${Date.now()}`,
+              firstName: clerkUser.firstName || '',
+              lastName: clerkUser.lastName || '',
+              photo: clerkUser.imageUrl || '',
+            })
+          }
+        }
+      }
+    }
+
+    if (!organizer) throw new Error('Organizer not found. Please log in or refresh your session.')
+
+    const newEvent = await Event.create({ ...event, category: event.categoryId, organizer: organizer._id })
     revalidatePath(path)
 
     return JSON.parse(JSON.stringify(newEvent))

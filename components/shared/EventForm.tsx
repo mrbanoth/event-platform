@@ -11,7 +11,7 @@ import { eventDefaultValues } from "@/constants"
 import Dropdown from "./Dropdown"
 import { Textarea } from "@/components/ui/textarea"
 import { FileUploader } from "./FileUploader"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import DatePicker from "react-datepicker";
 import { useUploadThing } from '@/lib/uploadthing'
@@ -32,6 +32,9 @@ type EventFormProps = {
 
 const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
   const [files, setFiles] = useState<File[]>([])
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [hasDraft, setHasDraft] = useState(false)
+
   const initialValues = event && type === 'Update' 
     ? { 
       ...event, 
@@ -47,18 +50,65 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
     resolver: zodResolver(eventFormSchema),
     defaultValues: initialValues
   })
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    if (type !== 'Create') return;
+
+    try {
+      const savedDraft = localStorage.getItem('tribely_event_form_draft');
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        form.reset({
+          ...parsed,
+          startDateTime: parsed.startDateTime ? new Date(parsed.startDateTime) : new Date(),
+          endDateTime: parsed.endDateTime ? new Date(parsed.endDateTime) : new Date(),
+        });
+        setHasDraft(true);
+      }
+    } catch (e) {
+      console.warn('Could not restore draft:', e);
+    }
+
+    // Auto-save form fields to localStorage as the user types
+    const subscription = form.watch((values) => {
+      try {
+        localStorage.setItem('tribely_event_form_draft', JSON.stringify(values));
+        setHasDraft(true);
+      } catch (err) {
+        // quota exceeded or private mode
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, type]);
+
+  const clearDraft = () => {
+    localStorage.removeItem('tribely_event_form_draft');
+    form.reset(eventDefaultValues);
+    setFiles([]);
+    setHasDraft(false);
+    setErrorMessage(null);
+  };
  
   async function onSubmit(values: z.infer<typeof eventFormSchema>) {
+    setErrorMessage(null);
     let uploadedImageUrl = values.imageUrl;
 
     if(files.length > 0) {
-      const uploadedImages = await startUpload(files)
+      try {
+        const uploadedImages = await startUpload(files)
 
-      if(!uploadedImages) {
+        if(!uploadedImages) {
+          setErrorMessage('Image upload failed. Please ensure your image is under 4MB.')
+          return
+        }
+
+        uploadedImageUrl = uploadedImages[0].url
+      } catch (uploadErr: any) {
+        setErrorMessage(uploadErr.message || 'Failed to upload image. Please check your image file.')
         return
       }
-
-      uploadedImageUrl = uploadedImages[0].url
     }
 
     if(type === 'Create') {
@@ -70,11 +120,15 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
         })
 
         if(newEvent) {
+          localStorage.removeItem('tribely_event_form_draft');
           form.reset();
           router.push(`/events/${newEvent._id}`)
+        } else {
+          setErrorMessage('Could not create event. Please verify your login session.')
         }
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        console.error('Error creating event:', error);
+        setErrorMessage(error?.message || 'Server error occurred while creating event. Please try again.')
       }
     }
 
@@ -104,6 +158,32 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        {errorMessage && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between">
+            <span>⚠️ {errorMessage}</span>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-red-500 hover:text-red-700 font-bold ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {hasDraft && type === 'Create' && (
+          <div className="p-3 px-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs md:text-sm flex items-center justify-between">
+            <span>💾 <b>Auto-Save Active:</b> Your filled fields are saved locally and will not be lost on refresh.</span>
+            <button
+              type="button"
+              onClick={clearDraft}
+              className="underline text-blue-600 hover:text-blue-800 font-medium ml-4 text-xs"
+            >
+              Clear Draft
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-5 md:flex-row">
           <FormField
             control={form.control}
