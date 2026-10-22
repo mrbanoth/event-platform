@@ -12,13 +12,15 @@ export default isClerkConfigured
         '/api/webhook/clerk',
         '/api/webhook/stripe',
         '/api/webhook/razorpay',
-        '/api/uploadthing'
+        '/api/uploadthing',
+        '/api/notifications/stream'
       ],
       ignoredRoutes: [
         '/api/webhook/clerk',
         '/api/webhook/stripe',
         '/api/webhook/razorpay',
-        '/api/uploadthing'
+        '/api/uploadthing',
+        '/api/notifications/stream'
       ]
     })
   : () => NextResponse.next();

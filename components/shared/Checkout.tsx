@@ -36,13 +36,13 @@ const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
       // 1. If event is free, directly create order and redirect to profile
       if (event.isFree) {
         await createOrder({
-          stripeId: `free_${Date.now()}_${userId.slice(0, 5)}`,
+          stripeId: `free_${Date.now()}_${(userId || 'guest').slice(0, 5)}`,
           eventId: event._id,
           buyerId: userId,
           totalAmount: '0',
           createdAt: new Date(),
         })
-        router.push('/profile')
+        router.push(`/profile?booking=success&type=free&event=${encodeURIComponent(event.title)}`)
         return
       }
 
@@ -79,19 +79,20 @@ const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
                 buyerId: userId,
                 totalAmount: event.price,
               })
-              router.push('/profile')
+              router.push(`/profile?booking=success&type=razorpay&paymentId=${response.razorpay_payment_id}&event=${encodeURIComponent(event.title)}`)
             } catch (err) {
               console.error('Payment verification failed:', err)
               alert('Payment succeeded but verification failed. Please contact support.')
             }
           },
           theme: {
-            color: '#4F46E5',
+            color: '#624CF5',
           },
         }
 
         const rzp = new window.Razorpay(options)
         rzp.on('payment.failed', function (response: any) {
+          setLoading(false)
           alert(`Payment failed: ${response.error?.description || 'Please try again.'}`)
         })
         rzp.open()
@@ -106,8 +107,9 @@ const Checkout = ({ event, userId }: { event: IEvent; userId: string }) => {
         isFree: false,
         buyerId: userId,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
+      alert(error?.message || 'Something went wrong during checkout. Please try again.')
     } finally {
       setLoading(false)
     }

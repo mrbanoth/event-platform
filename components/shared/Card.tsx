@@ -27,9 +27,23 @@ const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
     <div className="group relative flex min-h-[380px] w-full max-w-[400px] flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg md:min-h-[438px]">
       <Link 
         href={`/events/${event._id}`}
-        style={{backgroundImage: `url(${event.imageUrl})`}}
-        className="flex-center flex-grow bg-gray-50 bg-cover bg-center text-grey-500"
-      />
+        className="relative flex-center flex-grow min-h-[220px] overflow-hidden bg-gray-100 text-grey-500"
+      >
+        {event.imageUrl ? (
+          <Image
+            src={event.imageUrl}
+            alt={event.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+            className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex-center h-full w-full bg-primary-50 text-primary-500 font-semibold text-sm">
+            Tribely Event
+          </div>
+        )}
+      </Link>
       {/* IS EVENT CREATOR ... */}
 
       {isEventCreator && !hidePrice && (

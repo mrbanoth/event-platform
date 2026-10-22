@@ -9,6 +9,7 @@ import Category from '@/lib/database/models/category.model'
 import { handleError } from '@/lib/utils'
 import mongoose from 'mongoose'
 import { auth, currentUser } from '@clerk/nextjs'
+import { broadcastNotification } from '@/lib/notifications/emitter'
 
 import {
   CreateEventParams,
@@ -70,6 +71,21 @@ export async function createEvent({ userId, event, path }: CreateEventParams) {
 
     const newEvent = await Event.create({ ...event, category: event.categoryId, organizer: organizer._id })
     revalidatePath(path)
+
+    try {
+      broadcastNotification({
+        id: `notif_${Date.now()}`,
+        type: 'EVENT_CREATED',
+        title: '🚀 New Event Published!',
+        message: `"${newEvent.title}" is now live and accepting registrations.`,
+        badge: 'New Event',
+        eventTitle: newEvent.title,
+        timestamp: new Date().toISOString(),
+        read: false,
+      })
+    } catch (e) {
+      console.warn('Real-time event notification skipped:', e)
+    }
 
     return JSON.parse(JSON.stringify(newEvent))
   } catch (error) {
@@ -192,7 +208,24 @@ export async function getEventsByUser({ userId, limit = 6, page }: GetEventsByUs
   try {
     await connectToDatabase()
 
-    const conditions = { organizer: userId }
+    let organizerId = userId;
+    if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+      const user = await User.findOne({ clerkId: userId });
+      if (user) organizerId = user._id;
+    }
+    if (!organizerId) {
+      const { userId: clerkUserId } = auth();
+      if (clerkUserId) {
+        const user = await User.findOne({ clerkId: clerkUserId });
+        if (user) organizerId = user._id;
+      }
+    }
+
+    if (!organizerId) {
+      return { data: [], totalPages: 0 };
+    }
+
+    const conditions = { organizer: organizerId }
     const skipAmount = (page - 1) * limit
 
     const eventsQuery = Event.find(conditions)

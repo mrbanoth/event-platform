@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "../ui/button"
 import NavItems from "./NavItems"
 import MobileNav from "./MobileNav"
+import NotificationBell from "./NotificationBell"
 
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isClerkConfigured = !!(clerkKey && !clerkKey.includes("...") && clerkKey.startsWith("pk_") && clerkKey.length > 30);
@@ -28,7 +29,8 @@ const Header = () => {
               </nav>
             </SignedIn>
 
-            <div className="flex w-32 justify-end gap-3">
+            <div className="flex w-auto items-center justify-end gap-3">
+              <NotificationBell />
               <SignedIn>
                 <UserButton afterSignOutUrl="/" />
                 <MobileNav />
@@ -48,7 +50,8 @@ const Header = () => {
               <NavItems />
             </nav>
 
-            <div className="flex w-32 justify-end gap-3">
+            <div className="flex w-auto items-center justify-end gap-3">
+              <NotificationBell />
               <MobileNav />
               <Button asChild className="rounded-full" size="lg">
                 <Link href="/sign-in">

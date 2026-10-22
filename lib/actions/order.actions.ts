@@ -3,6 +3,8 @@
 import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
+import { auth, currentUser } from '@clerk/nextjs';
 import { CheckoutOrderParams, CreateOrderParams, GetOrdersByEventParams, GetOrdersByUserParams } from "@/types"
 import { redirect } from 'next/navigation';
 import { handleError } from '../utils';
@@ -11,6 +13,7 @@ import Order from '../database/models/order.model';
 import Event from '../database/models/event.model';
 import {ObjectId} from 'mongodb';
 import User from '../database/models/user.model';
+import { broadcastNotification } from '@/lib/notifications/emitter';
 
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -36,8 +39,8 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
         buyerId: order.buyerId,
       },
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/`,
+      success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/profile?booking=success&type=stripe&event=${encodeURIComponent(order.eventTitle)}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/events/${order.eventId}?payment=cancelled`,
     });
 
     redirect(session.url!)
@@ -122,11 +125,58 @@ export const createOrder = async (order: CreateOrderParams) => {
   try {
     await connectToDatabase();
     
+    // Resolve buyer to a valid MongoDB User document
+    let buyer = null;
+    if (order.buyerId && mongoose.Types.ObjectId.isValid(order.buyerId)) {
+      buyer = await User.findById(order.buyerId);
+    }
+    if (!buyer && order.buyerId) {
+      buyer = await User.findOne({ clerkId: order.buyerId });
+    }
+    // If not found, check current Clerk authenticated user
+    if (!buyer) {
+      const { userId: clerkUserId } = auth();
+      const targetClerkId = (order.buyerId && !mongoose.Types.ObjectId.isValid(order.buyerId)) ? order.buyerId : clerkUserId;
+      if (targetClerkId) {
+        buyer = await User.findOne({ clerkId: targetClerkId });
+        if (!buyer) {
+          const clerkUser = await currentUser();
+          if (clerkUser) {
+            buyer = await User.create({
+              clerkId: clerkUser.id,
+              email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
+              username: clerkUser.username || clerkUser.firstName || `user_${Date.now()}`,
+              firstName: clerkUser.firstName || '',
+              lastName: clerkUser.lastName || '',
+              photo: clerkUser.imageUrl || '',
+            });
+          }
+        }
+      }
+    }
+
+    if (!buyer) throw new Error('Buyer account not found. Please log in.');
+
     const newOrder = await Order.create({
       ...order,
       event: order.eventId,
-      buyer: order.buyerId,
+      buyer: buyer._id,
     });
+
+    try {
+      broadcastNotification({
+        id: `notif_${Date.now()}`,
+        type: 'BOOKING_SUCCESS',
+        title: '🎉 Ticket Confirmed!',
+        message: `Your registration for the event has been successfully confirmed.`,
+        badge: order.totalAmount === '0' ? 'Free RSVP' : 'Paid',
+        userId: buyer._id.toString(),
+        timestamp: new Date().toISOString(),
+        read: false,
+      });
+    } catch (e) {
+      console.warn('Real-time notification broadcast skipped:', e);
+    }
 
     return JSON.parse(JSON.stringify(newOrder));
   } catch (error) {
@@ -195,8 +245,25 @@ export async function getOrdersByUser({ userId, limit = 3, page }: GetOrdersByUs
   try {
     await connectToDatabase()
 
+    let buyerId = userId;
+    if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+      const user = await User.findOne({ clerkId: userId });
+      if (user) buyerId = user._id;
+    }
+    if (!buyerId) {
+      const { userId: clerkUserId } = auth();
+      if (clerkUserId) {
+        const user = await User.findOne({ clerkId: clerkUserId });
+        if (user) buyerId = user._id;
+      }
+    }
+
+    if (!buyerId) {
+      return { data: [], totalPages: 0 };
+    }
+
     const skipAmount = (Number(page) - 1) * limit
-    const conditions = { buyer: userId }
+    const conditions = { buyer: buyerId }
 
     const orders = await Order.distinct('event._id')
       .find(conditions)

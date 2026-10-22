@@ -122,7 +122,7 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
         if(newEvent) {
           localStorage.removeItem('tribely_event_form_draft');
           form.reset();
-          router.push(`/events/${newEvent._id}`)
+          router.push(`/profile?created=true&event=${encodeURIComponent(newEvent.title)}#events-organized`)
         } else {
           setErrorMessage('Could not create event. Please verify your login session.')
         }
@@ -147,7 +147,7 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
 
         if(updatedEvent) {
           form.reset();
-          router.push(`/events/${updatedEvent._id}`)
+          router.push(`/events/${updatedEvent._id}?updated=true`)
         }
       } catch (error) {
         console.log(error);
@@ -172,14 +172,17 @@ const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
         )}
 
         {hasDraft && type === 'Create' && (
-          <div className="p-3 px-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs md:text-sm flex items-center justify-between">
-            <span>💾 <b>Auto-Save Active:</b> Your filled fields are saved locally and will not be lost on refresh.</span>
+          <div className="flex items-center justify-between py-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              Draft
+            </span>
             <button
               type="button"
               onClick={clearDraft}
-              className="underline text-blue-600 hover:text-blue-800 font-medium ml-4 text-xs"
+              className="text-xs text-gray-400 hover:text-red-500 transition underline underline-offset-2"
             >
-              Clear Draft
+              Clear draft
             </button>
           </div>
         )}
