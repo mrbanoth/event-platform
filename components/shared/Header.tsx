@@ -12,10 +12,11 @@ const Header = () => {
   return (
     <header className="w-full border-b">
       <div className="wrapper flex items-center justify-between">
-        <Link href="/" className="w-36">
+        <Link href="/" className="w-44 flex items-center">
           <Image 
-            src="/assets/images/logo.svg" width={128} height={38}
+            src="/assets/images/logo.svg" width={175} height={46}
             alt="Tribely logo" 
+            className="w-auto h-9 md:h-10 object-contain"
           />
         </Link>
 

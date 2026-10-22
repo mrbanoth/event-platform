@@ -8,9 +8,10 @@ const Footer = () => {
         <Link href='/'>
           <Image 
             src="/assets/images/logo.svg"
-            alt="logo"
-            width={128}
-            height={38}
+            alt="Tribely logo"
+            width={160}
+            height={42}
+            className="w-auto h-9 object-contain"
           />
         </Link>
 

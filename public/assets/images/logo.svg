@@ -1,18 +1,18 @@
-<svg width="518" height="120" viewBox="0 0 518 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="335" height="88" viewBox="0 16 335 88" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Minimalist Geometric Icon Mark (Clean Bauhaus / Swiss Shapes, No Gradients) -->
   <g id="icon-mark">
     <!-- Base geometric pill -->
-    <rect x="12" y="24" width="28" height="72" rx="14" fill="#4F46E5"/>
+    <rect x="6" y="24" width="28" height="72" rx="14" fill="#4F46E5"/>
     <!-- Intersecting arch / ticket loop -->
-    <path d="M48 24C67.8823 24 84 40.1177 84 60C84 79.8823 67.8823 96 48 96H44V68H48C52.4183 68 56 64.4183 56 60C56 55.5817 52.4183 52 48 52H44V24H48Z" fill="#FF5757"/>
+    <path d="M42 24C61.8823 24 78 40.1177 78 60C78 79.8823 61.8823 96 42 96H38V68H42C46.4183 68 50 64.4183 50 60C50 55.5817 46.4183 52 42 52H38V24H42Z" fill="#FF5757"/>
     <!-- Center solid accent disc -->
-    <circle cx="48" cy="60" r="14" fill="#FBBF24"/>
+    <circle cx="42" cy="60" r="14" fill="#FBBF24"/>
   </g>
 
-  <!-- Clean, Authoritative Wordmark: TRIBELY -->
+  <!-- Clean, Authoritative Wordmark: Tribely -->
   <g id="brand-text">
-    <text x="112" y="78" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="-1.5" fill="#0F172A">Tribely</text>
-    <!-- Solid geometric dot badge -->
-    <circle cx="316" cy="71" r="7" fill="#4F46E5"/>
+    <text x="100" y="78" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="54" font-weight="900" letter-spacing="-1.5" fill="#0F172A">Tribely</text>
+    <!-- Solid geometric accent dot -->
+    <circle cx="310" cy="71" r="7.5" fill="#4F46E5"/>
   </g>
 </svg>

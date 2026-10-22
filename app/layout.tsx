@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: 'Tribely',
   description: 'Tribely is an all-in-one platform for event discovery, community gatherings, and ticketing.',
   icons: {
-    icon: '/assets/images/logo.svg'
+    icon: '/assets/images/favicon.svg'
   }
 }
 
