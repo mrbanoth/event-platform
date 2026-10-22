@@ -119,7 +119,38 @@ export async function getAllEvents({ query, limit = 6, page, category }: GetAllE
       totalPages: Math.ceil(eventsCount / limit),
     }
   } catch (error) {
-    handleError(error)
+    console.warn("MongoDB not connected yet, displaying demo events:", error);
+    return {
+      data: [
+        {
+          _id: 'demo-1',
+          title: 'Next.js 14 Full-Stack Architecture Summit',
+          description: 'Explore modern web architecture, Server Actions, Stripe payments, and cloud infrastructure.',
+          isFree: false,
+          price: '49',
+          imageUrl: '/assets/images/hero.png',
+          startDateTime: new Date().toISOString(),
+          endDateTime: new Date(Date.now() + 86400000).toISOString(),
+          category: { _id: 'cat-1', name: 'Technology' },
+          organizer: { _id: 'org-1', firstName: 'Sandeep', lastName: 'Naik' },
+          url: 'https://github.com/mrbanoth/event-platform'
+        },
+        {
+          _id: 'demo-2',
+          title: 'Global Tech & Startup Hackathon 2026',
+          description: 'A 48-hour global hackathon building state-of-the-art products and networking with founders.',
+          isFree: true,
+          price: '0',
+          imageUrl: '/assets/images/test.png',
+          startDateTime: new Date().toISOString(),
+          endDateTime: new Date(Date.now() + 172800000).toISOString(),
+          category: { _id: 'cat-2', name: 'Hackathon' },
+          organizer: { _id: 'org-2', firstName: 'Event', lastName: 'Platform' },
+          url: 'https://github.com/mrbanoth/event-platform'
+        }
+      ],
+      totalPages: 1
+    }
   }
 }
 

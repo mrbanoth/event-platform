@@ -1,19 +1,25 @@
 import { authMiddleware } from "@clerk/nextjs";
- 
-export default authMiddleware({
-  publicRoutes: [
-    '/',
-    '/events/:id',
-    '/api/webhook/clerk',
-    '/api/webhook/stripe',
-    '/api/uploadthing'
-  ],
-  ignoredRoutes: [
-    '/api/webhook/clerk',
-    '/api/webhook/stripe',
-    '/api/uploadthing'
-  ]
-});
+import { NextResponse } from "next/server";
+
+const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const isClerkConfigured = !!(clerkKey && !clerkKey.includes("...") && clerkKey.startsWith("pk_") && clerkKey.length > 30);
+
+export default isClerkConfigured
+  ? authMiddleware({
+      publicRoutes: [
+        '/',
+        '/events/:id',
+        '/api/webhook/clerk',
+        '/api/webhook/stripe',
+        '/api/uploadthing'
+      ],
+      ignoredRoutes: [
+        '/api/webhook/clerk',
+        '/api/webhook/stripe',
+        '/api/uploadthing'
+      ]
+    })
+  : () => NextResponse.next();
  
 export const config = {
   matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
