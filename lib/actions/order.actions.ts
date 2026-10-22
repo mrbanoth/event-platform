@@ -265,22 +265,23 @@ export async function getOrdersByUser({ userId, limit = 3, page }: GetOrdersByUs
     const skipAmount = (Number(page) - 1) * limit
     const conditions = { buyer: buyerId }
 
-    const orders = await Order.distinct('event._id')
-      .find(conditions)
-      .sort({ createdAt: 'desc' })
-      .skip(skipAmount)
-      .limit(limit)
-      .populate({
-        path: 'event',
-        model: Event,
-        populate: {
-          path: 'organizer',
-          model: User,
-          select: '_id firstName lastName',
-        },
-      })
-
-    const ordersCount = await Order.distinct('event._id').countDocuments(conditions)
+    const [orders, ordersCount] = await Promise.all([
+      Order.distinct('event._id')
+        .find(conditions)
+        .sort({ createdAt: 'desc' })
+        .skip(skipAmount)
+        .limit(limit)
+        .populate({
+          path: 'event',
+          model: Event,
+          populate: {
+            path: 'organizer',
+            model: User,
+            select: '_id firstName lastName',
+          },
+        }),
+      Order.distinct('event._id').countDocuments(conditions),
+    ])
 
     return { data: JSON.parse(JSON.stringify(orders)), totalPages: Math.ceil(ordersCount / limit) }
   } catch (error) {

@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   }
 }
 
+import TopProgressBar from '@/components/shared/TopProgressBar'
+
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isClerkConfigured = !!(clerkKey && !clerkKey.includes("...") && clerkKey.startsWith("pk_") && clerkKey.length > 30);
 
@@ -28,7 +30,10 @@ export default function RootLayout({
 }) {
   const content = (
     <html lang="en">
-      <body className={poppins.variable}>{children}</body>
+      <body className={poppins.variable}>
+        <TopProgressBar />
+        {children}
+      </body>
     </html>
   );
 

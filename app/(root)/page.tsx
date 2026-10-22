@@ -38,7 +38,7 @@ export default async function Home({ searchParams }: SearchParamProps) {
             {/* Dual CTAs: Create Event & Book Tickets */}
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
               <Button size="lg" asChild className="button w-full sm:w-fit shadow-lg shadow-primary-500/25">
-                <Link href="/events/create" className="flex items-center gap-2">
+                <Link href="/events/create" prefetch={true} className="flex items-center gap-2">
                   <span>+ Create Event</span>
                 </Link>
               </Button>

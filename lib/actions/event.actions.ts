@@ -160,8 +160,10 @@ export async function getAllEvents({ query, limit = 6, page, category }: GetAllE
       .skip(skipAmount)
       .limit(limit)
 
-    const events = await populateEvent(eventsQuery)
-    const eventsCount = await Event.countDocuments(conditions)
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery),
+      Event.countDocuments(conditions),
+    ])
 
     return {
       data: JSON.parse(JSON.stringify(events)),
@@ -233,8 +235,10 @@ export async function getEventsByUser({ userId, limit = 6, page }: GetEventsByUs
       .skip(skipAmount)
       .limit(limit)
 
-    const events = await populateEvent(eventsQuery)
-    const eventsCount = await Event.countDocuments(conditions)
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery),
+      Event.countDocuments(conditions),
+    ])
 
     return { data: JSON.parse(JSON.stringify(events)), totalPages: Math.ceil(eventsCount / limit) }
   } catch (error) {

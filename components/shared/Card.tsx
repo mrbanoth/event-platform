@@ -27,6 +27,7 @@ const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
     <div className="group relative flex min-h-[380px] w-full max-w-[400px] flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg md:min-h-[438px]">
       <Link 
         href={`/events/${event._id}`}
+        prefetch={true}
         className="relative flex-center flex-grow min-h-[220px] overflow-hidden bg-gray-100 text-grey-500"
       >
         {event.imageUrl ? (
@@ -72,7 +73,7 @@ const Card = ({ event, hasOrderLink, hidePrice }: CardProps) => {
           {formatDateTime(event.startDateTime).dateTime}
         </p>
 
-        <Link href={`/events/${event._id}`}>
+        <Link href={`/events/${event._id}`} prefetch={true}>
           <p className="p-medium-16 md:p-medium-20 line-clamp-2 flex-1 text-black">{event.title}</p>
         </Link>
 
