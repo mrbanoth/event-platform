@@ -1,8 +1,8 @@
 <div align="center">
   <br />
-  <h1 align="center"><b>Evently — Modern Event Management & Ticketing Platform</b></h1>
+  <h1 align="center"><b>Tribely — Modern Event Management & Ticketing Platform</b></h1>
   <p align="center">
-    A full-stack, responsive event organization and ticketing application built with Next.js 14, TypeScript, Tailwind CSS, Stripe, Clerk, and MongoDB.
+    A full-stack, responsive community event and ticketing application built with Next.js 14, TypeScript, Tailwind CSS, Stripe, Clerk, and MongoDB.
   </p>
   <br />
 
