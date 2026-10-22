@@ -11,11 +11,13 @@ export default isClerkConfigured
         '/events/:id',
         '/api/webhook/clerk',
         '/api/webhook/stripe',
+        '/api/webhook/razorpay',
         '/api/uploadthing'
       ],
       ignoredRoutes: [
         '/api/webhook/clerk',
         '/api/webhook/stripe',
+        '/api/webhook/razorpay',
         '/api/uploadthing'
       ]
     })
